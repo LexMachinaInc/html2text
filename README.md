@@ -33,7 +33,7 @@ _Originally written by Aaron Swartz. This code is distributed under the GPLv3._
 
 ## Getting started (developers)
 
-This project uses the [pybuilder](https://pybuilder.github.io/).
+This project uses the [pybuilder](http://pybuilder.github.io/).
 
 ```bash
 sudo pip install pyb_init
