@@ -8,9 +8,13 @@ __contributors__ = ["Martin 'Joey' Schulze", "Ricardo Reyes", "Kevin Jay North"]
 # TODO:
 #   Support decoded entities with unifiable.
 
+
 def has_key(x, y):
-    if hasattr(x, 'has_key'): return x.has_key(y)
-    else: return y in x
+    if hasattr(x, 'has_key'):
+        return x.has_key(y)
+    else:
+        return y in x
+
 
 try:
     import htmlentitydefs
@@ -26,8 +30,10 @@ except:
     import urllib
 import optparse, re, sys, codecs, types
 
-try: from textwrap import wrap
-except: pass
+try:
+    from textwrap import wrap
+except:
+    pass
 
 # Use Unicode characters instead of their ascii psuedo-replacements
 UNICODE_SNOB = 0
@@ -284,22 +290,24 @@ class HTML2Text(HTMLParser.HTMLParser):
 
             If the set of attributes is not found, returns None
         """
-        if not has_key(attrs, 'href'): return None
+        if not 'href' in attrs:
+            return None
 
         i = -1
         for a in self.a:
             i += 1
             match = 0
 
-            if has_key(a, 'href') and a['href'] == attrs['href']:
-                if has_key(a, 'title') or has_key(attrs, 'title'):
-                        if (has_key(a, 'title') and has_key(attrs, 'title') and
+            if 'href' in a and a['href'] == attrs['href']:
+                if 'title' in a or 'title' in attrs:
+                        if ('title' in a and 'title' in attrs and
                             a['title'] == attrs['title']):
                             match = True
                 else:
                     match = True
 
-            if match: return i
+            if match:
+                return i
 
     def drop_last(self, nLetters):
         if not self.quiet:
