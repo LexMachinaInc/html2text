@@ -4,8 +4,8 @@ import os
 import re
 import subprocess
 import sys
+import unittest
 
-sys.path.insert(0, '..')
 import html2text
 
 
@@ -86,39 +86,40 @@ def get_baseline(fn):
     f = codecs.open(name, mode='r', encoding='utf8')
     return f.read()
 
-def run_all_tests():
-    html_files = glob.glob("*.html")
-    passing = True
-    for fn in html_files:
-        module_args = {}
-        cmdline_args = []
 
-        if fn.lower().startswith('google'):
-            module_args['google_doc'] = True
-            cmdline_args.append('--googledoc')
+class Html2TextTests(unittest.TestCase):
 
-        if fn.lower().find('unicode') >= 0:
-            module_args['unicode_snob'] = True
+    def all_tests():
+        html_files = glob.glob("*.html")
+        passing = True
+        for fn in html_files:
+            module_args = {}
+            cmdline_args = []
 
-        if fn.lower().find('flip_emphasis') >= 0:
-            module_args['emphasis_mark'] = '*'
-            module_args['strong_mark'] = '__'
-            cmdline_args.append('-e')
+            if fn.lower().startswith('google'):
+                module_args['google_doc'] = True
+                cmdline_args.append('--googledoc')
 
-        if fn.lower().find('escape_snob') >= 0:
-            module_args['escape_snob'] = True
-            cmdline_args.append('--escape-all')
+            if fn.lower().find('unicode') >= 0:
+                module_args['unicode_snob'] = True
 
-        print('\n' + fn + ':')
-        passing = passing and test_module(fn, **module_args)
+            if fn.lower().find('flip_emphasis') >= 0:
+                module_args['emphasis_mark'] = '*'
+                module_args['strong_mark'] = '__'
+                cmdline_args.append('-e')
 
-        if not 'unicode_snob' in module_args: # Because there is no command-line option to control unicode_snob
-            passing = passing and test_command(fn, *cmdline_args)
-    if passing:
-        print("ALL TESTS PASSED")
-    else:
-        print("Fail.")
-        sys.exit(1)
+            if fn.lower().find('escape_snob') >= 0:
+                module_args['escape_snob'] = True
+                cmdline_args.append('--escape-all')
 
-if __name__ == "__main__":
-    run_all_tests()
+            print('\n' + fn + ':')
+            passing = passing and test_module(fn, **module_args)
+
+            if not 'unicode_snob' in module_args: # Because there is no command-line option to control unicode_snob
+                passing = passing and test_command(fn, *cmdline_args)
+        if passing:
+            print("ALL TESTS PASSED")
+        else:
+            print("Fail.")
+            self.fail()
+            sys.exit(1)
