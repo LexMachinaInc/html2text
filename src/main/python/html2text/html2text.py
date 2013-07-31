@@ -8,12 +8,6 @@ __contributors__ = ["Martin 'Joey' Schulze", "Ricardo Reyes", "Kevin Jay North"]
 # TODO:
 #   Support decoded entities with unifiable.
 
-try:
-    True
-except NameError:
-    setattr(__builtins__, 'True', 1)
-    setattr(__builtins__, 'False', 0)
-
 def has_key(x, y):
     if hasattr(x, 'has_key'): return x.has_key(y)
     else: return y in x
