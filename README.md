@@ -35,15 +35,14 @@ Or with some configuration options:
 _Originally written by Aaron Swartz. This code is distributed under the GPLv3._
 
 
-## How to do a release
-
-1. Update the version in `html2text.py`
-2. Update the version in `setup.py`
-3. Run `python setup.py sdist upload`
-
-## How to run unit tests
-
-    cd test/
-    python run_tests.py
-
-[![Build Status](https://secure.travis-ci.org/aaronsw/html2text.png)](http://travis-ci.org/aaronsw/html2text)
+## Getting started developing
+    ```bash
+    sudo pip install pyb_init
+    pyb-init github mriehl : html2text
+    ```
+    Further building (includes coverage, pep8 linting, building a release)
+    can be done with
+    ```bash
+    source venv/bin/activate
+    pyb
+    ```
