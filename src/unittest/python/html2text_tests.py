@@ -4,15 +4,19 @@ import os
 import re
 import subprocess
 import sys
-import unittest
+if sys.version_info[:2] < (2,7):
+    import unittest2 as unittest
+else:
+    import unittest
+import logging
+logging.basicConfig(format='%(levelname)s:%(funcName)s:%(message)s',
+    level=logging.DEBUG)
 
 import html2text
 
-
 def test_module(fn, google_doc=False, **kwargs):
-    print_conditions('module', google_doc=google_doc, **kwargs)
-
     h = html2text.HTML2Text()
+    h.fn = fn
 
     if google_doc:
         h.google_doc = True
@@ -20,18 +24,19 @@ def test_module(fn, google_doc=False, **kwargs):
         h.body_width = 0
         h.hide_strikethrough = True
 
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         setattr(h, k, v)
 
     result = get_baseline(fn)
-    actual = h.handle(file(fn).read())
-    return print_result(fn, 'module', result, actual)
+    inf = open(fn)
+    actual = h.handle(inf.read())
+    inf.close()
+    return result, actual
 
 def test_command(fn, *args):
-    print_conditions('command', *args)
     args = list(args)
-
-    cmd = [sys.executable or 'python', '../html2text.py']
+    cmd_name = 'src/main/python/html2text/html2text.py'
+    cmd = [sys.executable, cmd_name]
 
     if '--googledoc' in args:
         args.remove('--googledoc')
@@ -43,7 +48,9 @@ def test_command(fn, *args):
     cmd += [fn]
 
     result = get_baseline(fn)
-    actual = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
+    pid = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    out, _ = pid.communicate()
+    actual = out.decode()
 
     if os.name == 'nt':
         # Fix the unwanted CR to CRCRLF replacement
@@ -51,29 +58,7 @@ def test_command(fn, *args):
         actual = re.sub(r'\r+', '\r', actual)
         actual = actual.replace('\r\n', '\n')
 
-    return print_result(fn, 'command', result, actual)
-
-def print_conditions(mode, *args, **kwargs):
-    format = " * %s %s, %s: "
-    sys.stdout.write(format % (mode, args, kwargs))
-
-def print_result(fn, mode, result, actual):
-    if result == actual:
-        print('PASS')
-        return True
-    else:
-        print('FAIL')
-
-        if mode == 'command':
-            print(len(result), len(actual))
-
-        dump_name = get_dump_name(fn, mode)
-
-        f = codecs.open(dump_name, encoding='utf-8', mode='w+')
-        f.write(actual)
-
-        print("  Use: diff -u %s %s" % (get_baseline_name(fn), dump_name))
-        return False
+    return result, actual
 
 def get_dump_name(fn, suffix):
     return '%s-%s_output.md' % (os.path.splitext(fn)[0], suffix)
@@ -84,42 +69,56 @@ def get_baseline_name(fn):
 def get_baseline(fn):
     name = get_baseline_name(fn)
     f = codecs.open(name, mode='r', encoding='utf8')
-    return f.read()
+    out = f.read()
+    f.close()
+    return out
 
+class TestHTML2Text(unittest.TestCase):
+    pass
 
-class Html2TextTest(unittest.TestCase):
+def generate_test(fn):
+    def test_mod(self):
+        self.maxDiff = None
+        result, actual = test_module(fn, **module_args)
+        self.assertEqual(result, actual)
 
-    def test_all(self):
-        html_files = glob.glob("*.html")
-        passing = True
-        for fn in html_files:
-            module_args = {}
-            cmdline_args = []
+    def test_cmd(self):
+        # Because there is no command-line option to control unicode_snob
+        if not 'unicode_snob' in module_args:
+            self.maxDiff = None
+            result, actual = test_command(fn, *cmdline_args)
+            self.assertEqual(result, actual)
 
-            if fn.lower().startswith('google'):
-                module_args['google_doc'] = True
-                cmdline_args.append('--googledoc')
+    module_args = {}
+    cmdline_args = []
+    base_fn = os.path.basename(fn).lower()
 
-            if fn.lower().find('unicode') >= 0:
-                module_args['unicode_snob'] = True
+    if base_fn.startswith('google'):
+        module_args['google_doc'] = True
+        cmdline_args.append('--googledoc')
 
-            if fn.lower().find('flip_emphasis') >= 0:
-                module_args['emphasis_mark'] = '*'
-                module_args['strong_mark'] = '__'
-                cmdline_args.append('-e')
+    if base_fn.find('unicode') >= 0:
+        module_args['unicode_snob'] = True
 
-            if fn.lower().find('escape_snob') >= 0:
-                module_args['escape_snob'] = True
-                cmdline_args.append('--escape-all')
+    if base_fn.find('flip_emphasis') >= 0:
+        module_args['emphasis_mark'] = '*'
+        module_args['strong_mark'] = '__'
+        cmdline_args.append('-e')
 
-            print('\n' + fn + ':')
-            passing = passing and test_module(fn, **module_args)
+    if base_fn.find('escape_snob') >= 0:
+        module_args['escape_snob'] = True
+        cmdline_args.append('--escape-all')
 
-            if not 'unicode_snob' in module_args: # Because there is no command-line option to control unicode_snob
-                passing = passing and test_command(fn, *cmdline_args)
-        if passing:
-            print("ALL TESTS PASSED")
-        else:
-            print("Fail.")
-            self.fail()
-            sys.exit(1)
+    return test_mod, test_cmd
+
+# Originally from http://stackoverflow.com/questions/32899/\
+#    how-to-generate-dynamic-parametrized-unit-tests-in-python
+for fn in glob.glob("src/unittest/resources/*.html"):
+    test_name = 'test_%s' % os.path.splitext(os.path.basename(fn))[0].lower()
+    test_m, test_c = generate_test(fn)
+    setattr(TestHTML2Text, test_name + "_mod", test_m)
+    if test_c:
+        setattr(TestHTML2Text, test_name + "_cmd", test_c)
+
+if __name__ == "__main__":
+    unittest.main()
