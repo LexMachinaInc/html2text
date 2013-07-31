@@ -7,7 +7,12 @@ html2text is a Python script that converts a page of HTML into clean, easy-to-re
  * (less) disgusting code
  * maintaineable
 
-Usage from within Python:
+# If you use this software
+Please take a moment to pay your respects to Aaron.
+
+# Usage 
+
+## From within Python:
 
 ```python
 import html2text
