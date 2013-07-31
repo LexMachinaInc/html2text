@@ -87,9 +87,9 @@ def get_baseline(fn):
     return f.read()
 
 
-class Html2TextTests(unittest.TestCase):
+class Html2TextTest(unittest.TestCase):
 
-    def all_tests():
+    def test_all(self):
         html_files = glob.glob("*.html")
         passing = True
         for fn in html_files:
