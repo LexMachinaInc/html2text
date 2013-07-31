@@ -159,11 +159,11 @@ def dumb_css_parser(data):
         importIndex = data.find('@import')
 
     # parse the css. reverted from dictionary compehension in order to support older pythons
-    elements =  [x.split('{') for x in data.split('}') if '{' in x.strip()]
+    elements = [x.split('{') for x in data.split('}') if '{' in x.strip()]
     try:
         elements = dict([(a.strip(), dumb_property_dict(b)) for a, b in elements])
     except ValueError:
-        elements = {} # not that important
+        elements = {}  # not that important
 
     return elements
 
@@ -289,10 +289,11 @@ class HTML2Text(HTMLParser.HTMLParser):
         self.abbr_list = {}  # stack of abbreviations to write later
         self.baseurl = baseurl
 
-        try: del unifiable_n[name2cp('nbsp')]
-        except KeyError: pass
+        try:
+            del unifiable_n[name2cp('nbsp')]
+        except KeyError:
+            pass
         unifiable['nbsp'] = '&nbsp_place_holder;'
-
 
     def feed(self, data):
         data = data.replace("</' + 'script>", "</ignore>")
@@ -305,7 +306,8 @@ class HTML2Text(HTMLParser.HTMLParser):
 
     def outtextf(self, s):
         self.outtextlist.append(s)
-        if s: self.lastWasNL = s[-1] == '\n'
+        if s:
+            self.lastWasNL = s[-1] == '\n'
 
     def close(self):
         HTMLParser.HTMLParser.close(self)
@@ -350,8 +352,7 @@ class HTML2Text(HTMLParser.HTMLParser):
 
             if 'href' in a and a['href'] == attrs['href']:
                 if 'title' in a or 'title' in attrs:
-                        if ('title' in a and 'title' in attrs and
-                            a['title'] == attrs['title']):
+                        if ('title' in a and 'title' in attrs and a['title'] == attrs['title']):
                             match = True
                 else:
                     match = True
@@ -369,11 +370,11 @@ class HTML2Text(HTMLParser.HTMLParser):
         parent_emphasis = google_text_emphasis(parent_style)
 
         # handle Google's text emphasis
-        strikethrough =  'line-through' in tag_emphasis and self.hide_strikethrough
+        strikethrough = 'line-through' in tag_emphasis and self.hide_strikethrough
         bold = 'bold' in tag_emphasis and not 'bold' in parent_emphasis
         italic = 'italic' in tag_emphasis and not 'italic' in parent_emphasis
         fixed = google_fixed_width_font(tag_style) and not \
-                google_fixed_width_font(parent_style) and not self.pre
+            google_fixed_width_font(parent_style) and not self.pre
 
         if start:
             # crossed-out text must be handled before other attributes
@@ -441,7 +442,7 @@ class HTML2Text(HTMLParser.HTMLParser):
             parent_style = {}
             if start:
                 if self.tag_stack:
-                  parent_style = self.tag_stack[-1][2]
+                    parent_style = self.tag_stack[-1][2]
                 tag_style = element_style(attrs, self.style_def, parent_style)
                 self.tag_stack.append((tag, attrs, tag_style))
             else:
@@ -456,7 +457,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                 self.o(hn(tag)*"#" + ' ')
             else:
                 self.inheader = False
-                return # prevent redundant emphasis marks on headers
+                return  # prevent redundant emphasis marks on headers
 
         if tag in ['p', 'div']:
             if self.google_doc:
@@ -467,7 +468,8 @@ class HTML2Text(HTMLParser.HTMLParser):
             else:
                 self.p()
 
-        if tag == "br" and start: self.o("  \n")
+        if tag == "br" and start:
+            self.o("  \n")
 
         if tag == "hr" and start:
             self.p()
@@ -475,26 +477,34 @@ class HTML2Text(HTMLParser.HTMLParser):
             self.p()
 
         if tag in ["head", "style", 'script']:
-            if start: self.quiet += 1
-            else: self.quiet -= 1
+            if start:
+                self.quiet += 1
+            else:
+                self.quiet -= 1
 
         if tag == "style":
-            if start: self.style += 1
-            else: self.style -= 1
+            if start:
+                self.style += 1
+            else:
+                self.style -= 1
 
         if tag in ["body"]:
-            self.quiet = 0 # sites like 9rules.com never close <head>
+            self.quiet = 0  # sites like 9rules.com never close <head>
 
         if tag == "blockquote":
             if start:
-                self.p(); self.o('> ', 0, 1); self.start = 1
+                self.p()
+                self.o('> ', 0, 1)
+                self.start = 1
                 self.blockquote += 1
             else:
                 self.blockquote -= 1
                 self.p()
 
-        if tag in ['em', 'i', 'u'] and not self.ignore_emphasis: self.o(self.emphasis_mark)
-        if tag in ['strong', 'b'] and not self.ignore_emphasis: self.o(self.strong_mark)
+        if tag in ['em', 'i', 'u'] and not self.ignore_emphasis:
+            self.o(self.emphasis_mark)
+        if tag in ['strong', 'b'] and not self.ignore_emphasis:
+            self.o(self.strong_mark)
         if tag in ['del', 'strike', 's']:
             if start:
                 self.o("<"+tag+">")
@@ -506,7 +516,8 @@ class HTML2Text(HTMLParser.HTMLParser):
                 # handle some font attributes, but leave headers clean
                 self.handle_emphasis(start, tag_style, parent_style)
 
-        if tag in ["code", "tt"] and not self.pre: self.o('`') #TODO: `` `this` ``
+        if tag in ["code", "tt"] and not self.pre:
+            self.o('`')  # TODO: `` `this` ``
         if tag == "abbr":
             if start:
                 self.abbr_title = None
@@ -514,7 +525,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                 if has_key(attrs, 'title'):
                     self.abbr_title = attrs['title']
             else:
-                if self.abbr_title != None:
+                if self.abbr_title is not None:
                     self.abbr_list[self.abbr_data] = self.abbr_title
                     self.abbr_title = None
                 self.abbr_data = ''
@@ -564,10 +575,14 @@ class HTML2Text(HTMLParser.HTMLParser):
                         self.a.append(attrs)
                     self.o("[" + str(attrs['count']) + "]")
 
-        if tag == 'dl' and start: self.p()
-        if tag == 'dt' and not start: self.pbr()
-        if tag == 'dd' and start: self.o('    ')
-        if tag == 'dd' and not start: self.pbr()
+        if tag == 'dl' and start:
+            self.p()
+        if tag == 'dt' and not start:
+            self.pbr()
+        if tag == 'dd' and start:
+            self.o('    ')
+        if tag == 'dd' and not start:
+            self.pbr()
 
         if tag in ["ol", "ul"]:
             # Google Docs create sub lists as top level lists
@@ -579,9 +594,10 @@ class HTML2Text(HTMLParser.HTMLParser):
                 else:
                     list_style = tag
                 numbering_start = list_numbering_start(attrs)
-                self.list.append({'name':list_style, 'num':numbering_start})
+                self.list.append({'name': list_style, 'num': numbering_start})
             else:
-                if self.list: self.list.pop()
+                if self.list:
+                    self.list.pop()
             self.lastWasList = True
         else:
             self.lastWasList = False
@@ -589,14 +605,17 @@ class HTML2Text(HTMLParser.HTMLParser):
         if tag == 'li':
             self.pbr()
             if start:
-                if self.list: li = self.list[-1]
-                else: li = {'name':'ul', 'num':0}
+                if self.list:
+                    li = self.list[-1]
+                else:
+                    li = {'name': 'ul', 'num': 0}
                 if self.google_doc:
                     nest_count = self.google_nest_count(tag_style)
                 else:
                     nest_count = len(self.list)
-                self.o("  " * nest_count) #TODO: line up <ol><li>s > 9 correctly.
-                if li['name'] == "ul": self.o(self.ul_item_mark + " ")
+                self.o("  " * nest_count)  # TODO: line up <ol><li>s > 9 correctly.
+                if li['name'] == "ul":
+                    self.o(self.ul_item_mark + " ")
                 elif li['name'] == "ol":
                     li['num'] += 1
                     self.o(str(li['num'])+". ")
