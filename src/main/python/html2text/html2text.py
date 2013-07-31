@@ -454,7 +454,7 @@ class HTML2Text(HTMLParser.HTMLParser):
             self.p()
             if start:
                 self.inheader = True
-                self.o(hn(tag)*"#" + ' ')
+                self.o(hn(tag) * "#" + ' ')
             else:
                 self.inheader = False
                 return  # prevent redundant emphasis marks on headers
@@ -507,9 +507,9 @@ class HTML2Text(HTMLParser.HTMLParser):
             self.o(self.strong_mark)
         if tag in ['del', 'strike', 's']:
             if start:
-                self.o("<"+tag+">")
+                self.o("<" + tag + ">")
             else:
-                self.o("</"+tag+">")
+                self.o("</" + tag + ">")
 
         if self.google_doc:
             if not self.inheader:
@@ -618,7 +618,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                     self.o(self.ul_item_mark + " ")
                 elif li['name'] == "ol":
                     li['num'] += 1
-                    self.o(str(li['num'])+". ")
+                    self.o(str(li['num']) + ". ")
                 self.start = 1
 
         if tag in ["table", "tr"] and start:
@@ -681,7 +681,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                 # else: list content is already partially indented
                 for i in xrange(len(self.list)):
                     bq += "    "
-                data = data.replace("\n", "\n"+bq)
+                data = data.replace("\n", "\n" + bq)
 
             if self.startpre:
                 self.startpre = 0
@@ -700,7 +700,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                 self.space = 0
 
             if self.p_p:
-                self.out((self.br_toggle+'\n'+bq)*self.p_p)
+                self.out((self.br_toggle + '\n' + bq) * self.p_p)
                 self.space = 0
                 self.br_toggle = ''
 
@@ -718,7 +718,7 @@ class HTML2Text(HTMLParser.HTMLParser):
                     if self.outcount > link['outcount']:
                         self.out("   [" + str(link['count']) + "]: " + urlparse.urljoin(self.baseurl, link['href']))
                         if has_key(link, 'title'):
-                            self.out(" ("+link['title']+")")
+                            self.out(" (" + link['title'] + ")")
                         self.out("\n")
                     else:
                         newa.append(link)

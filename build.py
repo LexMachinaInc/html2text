@@ -30,6 +30,8 @@ def set_properties(project):
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').append('README.md')
 
+    project.set_property('flake8_ignore', 'F403')
+
     project.set_property('coverage_break_build', False)
     project.set_property('distutils_classifiers', [
        'Development Status :: 5 - Production/Stable',
