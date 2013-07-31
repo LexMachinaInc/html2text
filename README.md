@@ -36,13 +36,15 @@ _Originally written by Aaron Swartz. This code is distributed under the GPLv3._
 
 
 ## Getting started developing
-    ```bash
-    sudo pip install pyb_init
-    pyb-init github mriehl : html2text
-    ```
-    Further building (includes coverage, pep8 linting, building a release)
-    can be done with
-    ```bash
-    source venv/bin/activate
-    pyb
-    ```
+
+```bash
+sudo pip install pyb_init
+pyb-init github mriehl : html2text
+```
+
+Further building (includes coverage, pep8 linting, building a release) can be done with
+
+```bash
+source venv/bin/activate
+pyb
+```
