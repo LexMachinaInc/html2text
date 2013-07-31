@@ -10,25 +10,27 @@ __contributors__ = ["Martin 'Joey' Schulze", "Ricardo Reyes", "Kevin Jay North"]
 
 
 def has_key(x, y):
-    if hasattr(x, 'has_key'):
-        return x.has_key(y)
-    else:
-        return y in x
+    return y in x
 
 
 try:
     import htmlentitydefs
     import urlparse
     import HTMLParser
-except ImportError: #Python3
+except ImportError:  # Python3
     import html.entities as htmlentitydefs
     import urllib.parse as urlparse
     import html.parser as HTMLParser
-try: #Python3
+
+try:  # Python3
     import urllib.request as urllib
 except:
     import urllib
-import optparse, re, sys, codecs, types
+
+import optparse
+import re
+import sys
+import codecs
 
 try:
     from textwrap import wrap
@@ -61,33 +63,68 @@ IGNORE_ANCHORS = False
 IGNORE_IMAGES = False
 IGNORE_EMPHASIS = False
 
+
 ### Entity Nonsense ###
 
+
 def name2cp(k):
-    if k == 'apos': return ord("'")
-    if hasattr(htmlentitydefs, "name2codepoint"): # requires Python 2.3
+    if k == 'apos':
+        return ord("'")
+    if hasattr(htmlentitydefs, "name2codepoint"):  # requires Python 2.3
         return htmlentitydefs.name2codepoint[k]
     else:
         k = htmlentitydefs.entitydefs[k]
-        if k.startswith("&#") and k.endswith(";"): return int(k[2:-1]) # not in latin-1
+        if k.startswith("&#") and k.endswith(";"):
+            return int(k[2:-1])  # not in latin-1
         return ord(codecs.latin_1_decode(k)[0])
 
-unifiable = {'rsquo':"'", 'lsquo':"'", 'rdquo':'"', 'ldquo':'"',
-'copy':'(C)', 'mdash':'--', 'nbsp':' ', 'rarr':'->', 'larr':'<-', 'middot':'*',
-'ndash':'-', 'oelig':'oe', 'aelig':'ae',
-'agrave':'a', 'aacute':'a', 'acirc':'a', 'atilde':'a', 'auml':'a', 'aring':'a',
-'egrave':'e', 'eacute':'e', 'ecirc':'e', 'euml':'e',
-'igrave':'i', 'iacute':'i', 'icirc':'i', 'iuml':'i',
-'ograve':'o', 'oacute':'o', 'ocirc':'o', 'otilde':'o', 'ouml':'o',
-'ugrave':'u', 'uacute':'u', 'ucirc':'u', 'uuml':'u',
-'lrm':'', 'rlm':''}
+unifiable = {'rsquo': "'",
+             'lsquo': "'",
+             'rdquo': '"',
+             'ldquo': '"',
+             'copy': '(C)',
+             'mdash': '--',
+             'nbsp': ' ',
+             'rarr': '->',
+             'larr': '<-',
+             'middot': '*',
+             'ndash': '-',
+             'oelig': 'oe',
+             'aelig': 'ae',
+             'agrave': 'a',
+             'aacute': 'a',
+             'acirc': 'a',
+             'atilde': 'a',
+             'auml': 'a',
+             'aring': 'a',
+             'egrave': 'e',
+             'eacute': 'e',
+             'ecirc': 'e',
+             'euml': 'e',
+             'igrave': 'i',
+             'iacute': 'i',
+             'icirc': 'i',
+             'iuml': 'i',
+             'ograve': 'o',
+             'oacute': 'o',
+             'ocirc': 'o',
+             'otilde': 'o',
+             'ouml': 'o',
+             'ugrave': 'u',
+             'uacute': 'u',
+             'ucirc': 'u',
+             'uuml': 'u',
+             'lrm': '',
+             'rlm': ''}
 
 unifiable_n = {}
 
 for k in unifiable.keys():
     unifiable_n[name2cp(k)] = unifiable[k]
 
+
 ### End Entity Nonsense ###
+
 
 def onlywhite(line):
     """Return true if the line does only consist of whitespace characters."""
@@ -96,6 +133,7 @@ def onlywhite(line):
             return c is ' '
     return line
 
+
 def hn(tag):
     if tag[0] == 'h' and len(tag) == 2:
         try:
@@ -103,9 +141,11 @@ def hn(tag):
             if n in range(1, 10): return n
         except ValueError: return 0
 
+
 def dumb_property_dict(style):
     """returns a hash of css attributes"""
     return dict([(x.strip(), y.strip()) for x, y in [z.split(':', 1) for z in style.split(';') if ':' in z]]);
+
 
 def dumb_css_parser(data):
     """returns a hash of css selectors, each of which contains a hash of css attributes"""
@@ -125,6 +165,7 @@ def dumb_css_parser(data):
 
     return elements
 
+
 def element_style(attrs, style_def, parent_style):
     """returns a hash of the 'final' style attributes of the element"""
     style = parent_style.copy()
@@ -137,6 +178,7 @@ def element_style(attrs, style_def, parent_style):
         style.update(immediate_style)
     return style
 
+
 def google_list_style(style):
     """finds out whether this is an ordered or unordered list"""
     if 'list-style-type' in style:
@@ -145,11 +187,13 @@ def google_list_style(style):
             return 'ul'
     return 'ol'
 
+
 def google_has_height(style):
     """check if the style of the element has the 'height' attribute explicitly defined"""
     if 'height' in style:
         return True
     return False
+
 
 def google_text_emphasis(style):
     """return a list of all emphasis modifiers of the element"""
@@ -162,6 +206,7 @@ def google_text_emphasis(style):
         emphasis.append(style['font-weight'])
     return emphasis
 
+
 def google_fixed_width_font(style):
     """check if the css of the current element defines a fixed width font"""
     font_family = ''
@@ -171,6 +216,7 @@ def google_fixed_width_font(style):
         return True
     return False
 
+
 def list_numbering_start(attrs):
     """extract numbering from list element attributes"""
     if 'start' in attrs:
@@ -178,7 +224,9 @@ def list_numbering_start(attrs):
     else:
         return 0
 
+
 class HTML2Text(HTMLParser.HTMLParser):
+
     def __init__(self, out=None, baseurl=''):
         HTMLParser.HTMLParser.__init__(self)
 
